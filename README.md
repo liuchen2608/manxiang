@@ -1,34 +1,75 @@
-# manxiang · 漫想 AI 漫画工作台
+# manxiang · 漫想江湖写作陪伴
 
-一句故事 → 可编辑剧本 → 角色设定与参考图 → 4/6/8 格分镜 → 逐格绘制与 PNG 长图导出。
+用户是作者：先确认世界观和主角，与主角讨论重大事件，确认节点后，由固定版本的金庸 skill 扩写小说。服务端保存故事、章节、人物、事实、未解伏笔及历史版本。
 
-## 本地运行
+- `/`：江湖写作工作台。
+- `/comic`：原有漫画工作台，继续支持剧本、分镜和漫画生成。
+- [产品需求](docs/PRD-写作陪伴助手.md) · [开发与验证说明](docs/开发交付.md)
 
-Node.js 22.13+。首次安装：`npm run install:ci`，启动：`npm run dev`，打开终端打印的地址。
+## 本地启动
 
-「体验示例」载入预先编写的四格故事和一张 AI 插画；不会伪装成即时生成。点击「连接 AI」，输入自己的 OpenAI API Key，然后生成新作品。Key 仅存在页面内存，每次请求经本站服务端传给固定的 OpenAI 官方地址；不写日志、localStorage 或项目文件。刷新会丢失 Key 和作品，请在离开前导出剧本/分镜或完整 PNG 漫画。
+需要 Node.js 22.13+。安装后先构建一次以生成本地数据库配置：
 
-文本模型 `gpt-4.1-mini`，图像模型 `gpt-image-1`。按 API 账户计费，账户需具备对应权限。未填写 Key 时不调用模型。参考图每次重新生成都会标记现有分镜图过期；之后通过 Images Edits API 提供同一参考图逐格绘制。修改对白仅影响排版，修改画面描述只标记该格过期。修改剧本要求显式重拆分镜。中途失败保留前面成功的画面，后续继续只生成缺失或过期的格子。
+```bash
+npm run install:ci
+npm run build
+```
 
-导出包括 Markdown 剧本与分镜、包含所有画面和对白的 PNG 长图。没有服务端项目存储或跨设备协作。
+**仅在首次建立本地数据库时**，应用初始迁移；已有数据库不要重复执行这份 SQL：
 
-## 验证
+```bash
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_wooden_nehzno.sql
+```
 
-`npx tsc --noEmit`
+启动：
 
-`node --input-type=module -e 'import {build} from "esbuild"; await build({entryPoints:["tests/generation.test.ts"],bundle:true,platform:"node",format:"esm",outfile:"/tmp/comic-generation-test.mjs"});'`
+```bash
+npm run dev
+```
 
-`node --test /tmp/comic-generation-test.mjs`
+打开终端打印的地址（默认 `http://localhost:5173`）。当前开发机已应用初始迁移，可直接启动。存档位于项目本地的 `.wrangler/state`，此目录不会上传 GitHub。
 
-`npm run build`
+## 创作流程
 
-测试使用模拟供应商响应，覆盖 schema 校验、分镜数、错误脱敏、角色参考图传递。未使用用户 Key 进行付费的真实模型联调。WebMCP 提供读取作品、切换编辑阶段两个工具；当前工具环境没有支持该协议的验证上下文，尚未实机验证。
+1. 创建故事，输入不少于 8 字的江湖方向。
+2. 在“连接 AI”中填写自己的 OpenAI API Key；文本模型为 `gpt-4.1-mini`。
+3. 生成、编辑并确认世界观，再生成和确认主角与必要配角。
+4. 与主角讨论当前事件，修改并确认事件卡。
+5. 点击“把这个节点写成小说”。节点计划在正文提交前不会改变故事事实。
+6. 继续下一个节点；也可以润色某个已写事件，比较候选后接受。
+7. 手动整理章节，或在上下文达到阈值时自动整理。故事与原始讨论持续保存。
+8. 随时导出 Markdown 或 JSON；在“章节与记忆”中导出历史快照。
 
-## API 合同来源
+API Key 只在页面内存中保留，经本站转发到固定 OpenAI 官方接口；不进入数据库或日志。刷新后需要重新填写。API 调用按使用者账户计费。作品使用当前浏览器的 HttpOnly 随机凭证访问，清除浏览器数据可能失去匿名存档入口。
 
-- [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-- [OpenAI Image Generation](https://developers.openai.com/api/docs/guides/image-generation)
+## 金庸 skill
 
-## 已知边界
+来源：[Wunicheng233/jin-yong-perspective](https://github.com/Wunicheng233/jin-yong-perspective)。固定 commit：`bfc14e72d73fe8ebe5b3e73a548b29d238027468`。
 
-角色参考图能帮助保持一致性，不能保证每个细节完全一致。单次请求超时后，供应商可能仍在处理；手动重试可能产生另一笔 API 用量。图像在当前页面内存中处理，适用于短篇。私人部署是当前交付范围，不具备公共多租户服务的账户、配额与计费管理。
+原文与来源记录位于 `vendor/jin-yong-perspective/`；服务端加载同一内容的构建模块，并在正文任务开始时核验 SHA-256。适配规则要求输出原创江湖小说，不让主角对话切换成技能顾问身份。模型与技能不负责直接提交正式状态，宿主工作流执行确认、校验和保存。
+
+## 检查
+
+```bash
+npm test
+npm run typecheck
+npm run build
+```
+
+启动本地服务和数据库后，可以运行无付费调用的 API 验证：
+
+```bash
+npm run test:api
+```
+
+测试会创建独立临时存档，并输出清理 SQL 到 `/private/tmp/manxiang-smoke-cleanup.sql`。执行下列命令仅清理该次测试生成的记录：
+
+```bash
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file /private/tmp/manxiang-smoke-cleanup.sql
+```
+
+## 部署说明
+
+GitHub 托管源码。应用依赖 Worker 服务端和 D1 数据库，不能仅发布静态页面得到完整功能。构建产物兼容现有 Sites / Cloudflare Worker 流程；发布环境必须绑定 `DB` 并应用 `drizzle/` 中尚未执行的迁移。
+
+尚未部署新的在线写作版本；真实模型生成尚未使用有效用户 Key 做付费联调。接口合同参考 [OpenAI 文本输出指南](https://developers.openai.com/api/docs/guides/structured-outputs)。

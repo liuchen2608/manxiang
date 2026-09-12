@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "漫想 · AI 漫画工作台",
-  description: "从一个故事念头开始，创作剧本、设计角色、拆解分镜，生成属于你的漫画。",
+  title: "漫想 · 江湖写作陪伴",
+  description: "与主角商量命运，把确认的重大事件写成江湖小说，保存章节、人物与伏笔。",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
