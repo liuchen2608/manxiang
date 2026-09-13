@@ -19,5 +19,5 @@ export async function exportComic(p:Project){
   if(i%2===1||i===p.panels.length-1)y+=rowHeights[Math.floor(i/2)];
  }
  ctx.font="18px Arial";ctx.fillStyle="#999";ctx.fillText("漫想 · COMIC STUDIO",60,canvas.height-20);
- const blob=await new Promise<Blob|null>(r=>canvas.toBlob(r,"image/png"));if(!blob)throw new Error("导出失败，请重试。");download(blob,`${p.title}.png`);
+ const blob=await new Promise<Blob|null>(r=>canvas.toBlob(r,"image/png"));if(!blob)throw new Error("导出失败，请重试。");download(blob,`${p.title}.png`);return blob;
 }

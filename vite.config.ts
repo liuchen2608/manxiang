@@ -1,3 +1,4 @@
+import {detectProxy,startAiProxy} from "./dev/ai-proxy";
 import vinext from "vinext";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
@@ -33,7 +34,10 @@ const localBindingConfig = {
     : [],
 };
 
-export default defineConfig(async () => {
+export default defineConfig(async ({command}) => {
+  const proxy=command==="serve"?detectProxy():undefined;
+  const relay=proxy?await startAiProxy(proxy):undefined;
+  if(relay)console.info("[manxiang] OpenAI local development proxy enabled");
   // Use Miniflare's local Request.cf placeholder unless fetching is requested.
   process.env.CLOUDFLARE_CF_FETCH_ENABLED ??= "false";
   process.env.WRANGLER_SEND_METRICS ??= "false";
@@ -53,12 +57,13 @@ export default defineConfig(async () => {
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
     plugins: [
+      ...(relay?[{name:"manxiang-local-ai-proxy",configureServer(server:import("vite").ViteDevServer){server.httpServer?.once("close",relay.close);}}]:[]),
       vinext(),
       sites(),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
-        config: localBindingConfig,
+        config: {...localBindingConfig,...(relay?{vars:{MANXIANG_DEV_AI_RELAY:relay.url,MANXIANG_DEV_AI_TOKEN:relay.token}}:{})},
       }),
     ],
   };

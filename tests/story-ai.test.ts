@@ -20,3 +20,29 @@ test('empty JSON retries; truncated output and invalid credentials fail',async()
  globalThis.fetch=async()=>{throw Error('must not call');};await assert.rejects(modelClient(key,'unknown')('正文','故事',schema,{}),/不支持/);
  }finally{globalThis.fetch=original;}
 });
+
+// Uses the exact header builder called by both author actions and auto-archive.
+import {normalizeApiKey,storyRequestHeaders} from '../lib/story/credentials';
+test('invalid pasted keys get safe feedback before constructing fetch headers',()=>{
+ for(const suffix of ['中文','\u200b','\nX-Test: value',' internal space','é']) {
+  const bad=key+suffix;
+  assert.throws(()=>storyRequestHeaders(bad,'deepseek',true),error=>error instanceof Error&&/API Key 格式不正确/.test(error.message)&&!error.message.includes(key));
+  const manual=storyRequestHeaders(bad,'deepseek',false);
+  assert.equal(manual.has('x-ai-key'),false);
+ }
+ assert.equal(normalizeApiKey('  '+key+'\n'),key);
+ for(const provider of ['deepseek','openai'])assert.equal(new Request('https://example.test/api/stories',{method:'POST',headers:storyRequestHeaders(key,provider,true)}).headers.get('x-ai-key'),key);
+});
+test('invalid key is rejected before any upstream network call',async()=>{
+ const original=globalThis.fetch;let called=false;
+ globalThis.fetch=async()=>{called=true;throw Error('unexpected network call');};
+ try{await assert.rejects(modelClient(key+'中文','deepseek')('世界观','故事',schema,{}),/API Key 格式不正确/);assert.equal(called,false);}finally{globalThis.fetch=original;}
+});
+test('writing assistant forwards only to the explicitly selected endpoint',async()=>{
+ const original=globalThis.fetch;
+ try{globalThis.fetch=async url=>{assert.equal(String(url),'https://api.openai-next.com/v1/chat/completions');return response('{"text":"江湖"}');};
+ assert.equal((await modelClient(key,'openai','next')('世界','故事',schema,{})).text,'江湖');
+ assert.equal(storyRequestHeaders(key,'openai',true,'next').get('x-openai-endpoint'),'next');
+ assert.equal(storyRequestHeaders(key,'deepseek',true,'next').has('x-openai-endpoint'),false);
+ }finally{globalThis.fetch=original;}
+});

@@ -12,3 +12,16 @@
 @media(max-width:720px){.style-options{grid-template-columns:repeat(4,1fr)}.style-choice{flex-direction:column;justify-content:center;gap:6px}.style-choice>svg{display:none}.sidebar-bottom{margin-top:15px;padding-top:12px}.story-sidebar fieldset{margin-bottom:18px}.character-list{grid-template-columns:1fr 1fr}.panel-row{grid-template-columns:1fr 1fr;gap:10px}.pane-content{padding:24px 18px}.pane-title h3{font-size:18px}.pane-title p{font-size:13px}.pane-footer{align-items:flex-end}.page-footer{padding:0 20px}.page-footer>span:last-child{display:none}.editor-heading{padding:22px 18px}.heading-actions{max-width:45%}.badge{font-size:11px}.generation-status{padding:12px}.generation-status>div:first-child{flex-wrap:wrap}.script-input{min-height:440px!important}}
 @media(max-width:460px){.character-list{grid-template-columns:1fr}.comic-grid{grid-template-columns:1fr}.comic-panel-footer{flex-direction:row}.comic-toolbar{align-items:stretch;flex-direction:column}.panel-editor{padding:12px;gap:10px}.panel-index{font-size:23px;min-width:28px}.panel-row{grid-template-columns:1fr;gap:0}.workflow-tabs{padding:0 6px!important}.workflow-tabs [role=tab]{font-size:13px;gap:5px}.pane-footer{align-items:flex-start;flex-direction:column}.pane-footer>span{max-width:100%}.story-sidebar h1{font-size:26px}.topbar .secondary{font-size:12px;padding:8px 10px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Local memoir collection */
+.memoir-dialog { width: min(960px, calc(100vw - 32px)); max-width: min(960px, calc(100vw - 32px)); max-height: 88dvh; overflow-y: auto; }
+.memoir-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; padding-top:16px; }
+.memoir-card { border:1px solid #e5e1ed; border-radius:16px; overflow:hidden; background:#fff; }
+.memoir-cover { display:block; width:100%; padding:0; border:0; background:#f6f4fa; cursor:pointer; }
+.memoir-cover img { width:100%; height:210px; object-fit:contain; object-position:top; }
+.memoir-details { padding:16px; display:grid; gap:8px; overflow-wrap:anywhere; }
+.memoir-details small { color:#787184; }
+.memoir-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.memoir-empty { grid-column:1/-1; padding:48px 12px; text-align:center; color:#787184; }
+.memoir-full { display:block; width:100%; height:auto; }
+@media(max-width:600px) { .memoir-grid { grid-template-columns:1fr; } .heading-actions { flex-wrap:wrap; } .editor-heading { flex-wrap:wrap; gap:14px; } }
